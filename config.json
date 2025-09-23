@@ -1,0 +1,52 @@
+{
+    "servers": {
+        "server1": {
+            "name": "Main Server",
+            "enabled": true,
+            "blackmarket_map_path": "C:\\Path\\To\\Server1\\Blackmarket.map",
+            "blackmarket_trader_zone_path": "C:\\Path\\To\\Server1\\Blackmarket.json",
+            "discord_webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_SERVER1"
+        },
+        "server2": {
+            "name": "Test Server",
+            "enabled": false,
+            "blackmarket_map_path": "C:\\Path\\To\\Server2\\Blackmarket.map",
+            "blackmarket_trader_zone_path": "C:\\Path\\To\\Server2\\Blackmarket.json",
+            "discord_webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_SERVER2"
+        }
+    },
+    "global_settings": {
+        "discord_username": "Axios - Black Market",
+        "discord_embed_color": "0xFF0000"
+    },
+    "scheduler_settings": {
+        "enabled": true,
+        "rotation_times": ["04:00", "07:00", "10:00", "13:00", "16:00", "19:00", "22:00", "01:00"],
+        "log_file": "blackmarket_scheduler.log",
+        "check_interval_seconds": 60,
+        "rotate_all_servers": true,
+        "server_rotation_delay_seconds": 5
+    },
+    "positions": [
+        {
+            "name": "Rog Castle",
+            "Blackmarket_Vending_Classname": "Axios_Vending_Blackmarket",
+            "Blackmarket_Vending_Coordinates": [11250.809570, 292.798279, 4282.285645],
+            "Blackmarket_Vending_Rotation": [-174.761093, 0.000000, -0.000000],
+            "Blackmarket_Vehicle_Classname": "Axios_Vending_Car",
+            "Blackmarket_Vehicle_Coordinates": [11251.859375, 289.082428, 4318.925781],
+            "Blackmarket_Vehicle_Rotation": [0.013298, 0.687243, 1.069596],
+            "img_path": "img/BM_ROG.png"
+        },
+        {
+            "name": "Krona Castle",
+            "Blackmarket_Vending_Classname": "Axios_Vending_Blackmarket",
+            "Blackmarket_Vending_Coordinates": [1386.522827, 302.572144, 9275.286133],
+            "Blackmarket_Vending_Rotation": [154.672714, 0.000000, -0.000000],
+            "Blackmarket_Vehicle_Classname": "Axios_Vending_Car",
+            "Blackmarket_Vehicle_Coordinates": [1488.645386, 312.621033, 9170.848633],
+            "Blackmarket_Vehicle_Rotation": [-168.001511, 0.000000, -0.000000],
+            "img_path": "img/BM_KRONA.png"
+        }
+    ]
+}

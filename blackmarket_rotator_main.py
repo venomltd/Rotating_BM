@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""
-DayZ Black Market Rotator - Complete Solution
-Multi-server black market rotation with Discord notifications and scheduling
-
-Author: Venom
-Version: 2.0.0
-"""
-
 import json
 import os
 import requests

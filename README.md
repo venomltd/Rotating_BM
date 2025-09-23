@@ -19,8 +19,6 @@ Rotating_BM/
 ├── blackmarket_rotator.bat        # Easy-to-use batch interface
 ├── config.json                    # Configuration file
 ├── README.md                      # This file
-├── Examples/                      # Example files
-│   └── Blackmarket.map
 └── img/                          # Location images
     ├── BM_KRONA.png
     └── BM_ROG.png

@@ -1,4 +1,4 @@
-# DayZ Blackmarket Rotator v2.0
+# DayZ Blackmarket Rotator
 
 A complete solution for automatically rotating your DayZ blackmarket between different locations with Discord notifications and scheduling capabilities.
 

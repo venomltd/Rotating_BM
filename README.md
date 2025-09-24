@@ -10,6 +10,7 @@ A complete solution for automatically rotating your DayZ blackmarket between dif
 - ✅ **Position Detection** - Automatically detects current blackmarket position
 - ✅ **Configuration Validation** - Comprehensive validation with helpful error messages
 - ✅ **Easy Setup** - Simple batch file interface for all operations
+- ✅ **Optional Vehicle Traders** - Vehicle trader support is automatically enabled/disabled based on configuration
 
 ## 📁 Project Structure
 
@@ -64,6 +65,8 @@ The `config.json` file contains all settings:
 ```
 
 ### Position Configuration
+
+**With Vehicle Traders** (all positions must include vehicle data):
 ```json
 {
   "positions": [
@@ -80,6 +83,23 @@ The `config.json` file contains all settings:
   ]
 }
 ```
+
+**Vending Only** (no vehicle data in any position):
+```json
+{
+  "positions": [
+    {
+      "name": "Location Name",
+      "Blackmarket_Vending_Classname": "Axios_Vending_Blackmarket",
+      "Blackmarket_Vending_Coordinates": [11250.81, 292.80, 4282.29],
+      "Blackmarket_Vending_Rotation": [154.67, 0.0, 0.0],
+      "img_path": "img/location.png"
+    }
+  ]
+}
+```
+
+> **Note**: Vehicle trader functionality is automatically enabled if ANY position contains vehicle data. If enabled, ALL positions must have complete vehicle information. If no positions have vehicle data, vehicle traders are disabled entirely.
 
 ### Scheduler Configuration
 ```json

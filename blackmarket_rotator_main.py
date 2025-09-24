@@ -192,38 +192,61 @@ class ConfigValidator:
             self.errors.append("positions must be a list")
             return
         
+        # Check if any position has vehicle data to determine if vehicles are used
+        has_vehicle_data = any(
+            'Blackmarket_Vehicle_Classname' in pos or 'Blackmarket_Vehicle_Coordinates' in pos 
+            for pos in positions if isinstance(pos, dict)
+        )
+        
+        # If any position has vehicle data, all positions must have complete vehicle data
+        vehicle_required = has_vehicle_data
+        
         for i, position in enumerate(positions):
             if not isinstance(position, dict):
                 self.errors.append(f"Position {i} must be an object")
                 continue
             
-            # Required fields
+            # Required fields for vending machine (always required)
             required_fields = [
                 'name',
                 'Blackmarket_Vending_Classname',
-                'Blackmarket_Vending_Coordinates',
-                'Blackmarket_Vehicle_Classname',
-                'Blackmarket_Vehicle_Coordinates'
+                'Blackmarket_Vending_Coordinates'
             ]
+            
+            # Add vehicle fields if any position uses vehicles
+            if vehicle_required:
+                required_fields.extend([
+                    'Blackmarket_Vehicle_Classname',
+                    'Blackmarket_Vehicle_Coordinates'
+                ])
             
             for field in required_fields:
                 if field not in position:
                     self.errors.append(f"Position {i} ('{position.get('name', 'unnamed')}') missing required field: '{field}'")
             
-            # Validate coordinates
-            coord_fields = ['Blackmarket_Vending_Coordinates', 'Blackmarket_Vehicle_Coordinates']
+            # Validate coordinates (vending always required)
+            coord_fields = ['Blackmarket_Vending_Coordinates']
+            if vehicle_required:
+                coord_fields.append('Blackmarket_Vehicle_Coordinates')
+                
             for field in coord_fields:
                 if field in position:
                     self._validate_coordinates(position[field], f"Position {i} {field}")
             
             # Validate rotation fields (optional)
-            rotation_fields = ['Blackmarket_Vending_Rotation', 'Blackmarket_Vehicle_Rotation']
+            rotation_fields = ['Blackmarket_Vending_Rotation']
+            if vehicle_required:
+                rotation_fields.append('Blackmarket_Vehicle_Rotation')
+                
             for field in rotation_fields:
                 if field in position:
                     self._validate_coordinates(position[field], f"Position {i} {field}")
             
             # Validate classnames
-            classname_fields = ['Blackmarket_Vending_Classname', 'Blackmarket_Vehicle_Classname']
+            classname_fields = ['Blackmarket_Vending_Classname']
+            if vehicle_required:
+                classname_fields.append('Blackmarket_Vehicle_Classname')
+                
             for field in classname_fields:
                 if field in position:
                     if not isinstance(position[field], str) or not position[field].strip():
@@ -235,6 +258,10 @@ class ConfigValidator:
                     self.errors.append(f"Position {i} img_path must be a string")
                 elif position['img_path'] and not os.path.exists(position['img_path']):
                     self.warnings.append(f"Position {i} image file not found: {position['img_path']}")
+        
+        # Log whether vehicles are enabled
+        if not has_vehicle_data:
+            self.warnings.append("No vehicle trader data found in positions - vehicle trader functionality will be disabled")
     
     def _validate_coordinates(self, coords, field_name):
         """Validate coordinate arrays"""
@@ -322,7 +349,20 @@ class BlackmarketRotator:
         
         # Load positions from config
         self.positions = self.config.get('positions', [])
+        
+        # Check if vehicles are enabled based on position data
+        self.vehicles_enabled = self.check_vehicles_enabled()
+        if not self.vehicles_enabled:
+            print("🚗 Vehicle trader functionality disabled - no vehicle data found in positions")
+        
         self.current_index = self.get_current_position_from_map()
+    
+    def check_vehicles_enabled(self):
+        """Check if any position has vehicle data to determine if vehicles are enabled"""
+        return any(
+            'Blackmarket_Vehicle_Classname' in pos or 'Blackmarket_Vehicle_Coordinates' in pos 
+            for pos in self.positions if isinstance(pos, dict)
+        )
     
     def load_config(self, config_path):
         """Load and validate configuration from JSON file"""
@@ -403,17 +443,21 @@ class BlackmarketRotator:
     def update_map_file(self, position):
         """Update existing .map file with new coordinates"""
         vending_coords = position['Blackmarket_Vending_Coordinates']
-        vehicle_coords = position['Blackmarket_Vehicle_Coordinates']
         vending_classname = position['Blackmarket_Vending_Classname']
-        vehicle_classname = position['Blackmarket_Vehicle_Classname']
         
         # Get rotation if available, otherwise use default
         vending_rotation = position.get('Blackmarket_Vending_Rotation', [0.0, 0.0, 0.0])
-        vehicle_rotation = position.get('Blackmarket_Vehicle_Rotation', [0.0, 0.0, 0.0])
         
-        # Format the new lines
+        # Format the vending machine line
         new_vending_line = f"{vending_classname}.Blackmarket|{vending_coords[0]} {vending_coords[1]} {vending_coords[2]}|{vending_rotation[0]} {vending_rotation[1]} {vending_rotation[2]}"
-        new_vehicle_line = f"{vehicle_classname}.Blackmarket_Vehicles|{vehicle_coords[0]} {vehicle_coords[1]} {vehicle_coords[2]}|{vehicle_rotation[0]} {vehicle_rotation[1]} {vehicle_rotation[2]}"
+        
+        # Prepare vehicle line if vehicles are enabled
+        new_vehicle_line = None
+        if self.vehicles_enabled:
+            vehicle_coords = position['Blackmarket_Vehicle_Coordinates']
+            vehicle_classname = position['Blackmarket_Vehicle_Classname']
+            vehicle_rotation = position.get('Blackmarket_Vehicle_Rotation', [0.0, 0.0, 0.0])
+            new_vehicle_line = f"{vehicle_classname}.Blackmarket_Vehicles|{vehicle_coords[0]} {vehicle_coords[1]} {vehicle_coords[2]}|{vehicle_rotation[0]} {vehicle_rotation[1]} {vehicle_rotation[2]}"
         
         # Read existing map file
         with open(self.blackmarket_map_path, 'r', encoding='utf-8') as f:
@@ -436,9 +480,13 @@ class BlackmarketRotator:
                     print(f"Updated vending line: {new_vending_line}")
                 elif '.Blackmarket_Vehicles|' in line:
                     # This is a vehicle trader line
-                    updated_lines.append(new_vehicle_line)
-                    vehicle_updated = True
-                    print(f"Updated vehicle line: {new_vehicle_line}")
+                    if self.vehicles_enabled and new_vehicle_line:
+                        updated_lines.append(new_vehicle_line)
+                        vehicle_updated = True
+                        print(f"Updated vehicle line: {new_vehicle_line}")
+                    else:
+                        # Remove vehicle line if vehicles are disabled
+                        print(f"Removed vehicle line (vehicles disabled): {line}")
                 else:
                     # Keep other lines unchanged
                     updated_lines.append(line)
@@ -448,7 +496,7 @@ class BlackmarketRotator:
             updated_lines.append(new_vending_line)
             print(f"Added new vending line: {new_vending_line}")
         
-        if not vehicle_updated:
+        if self.vehicles_enabled and not vehicle_updated and new_vehicle_line:
             updated_lines.append(new_vehicle_line)
             print(f"Added new vehicle line: {new_vehicle_line}")
         
